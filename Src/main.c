@@ -65,6 +65,7 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 unsigned short SoftTimer[5] = {0, 0, 0, 0, 0};
+int stage = 0;
 
 void SoftTimerCountDown(void) {
 	char i;
@@ -72,10 +73,24 @@ void SoftTimerCountDown(void) {
 		if (SoftTimer[i] > 0) SoftTimer[i]--;
 	}
 }
-
+int actions[10][4] = {
+	{4000, 0, 0, 0},
+	{3000, 30, 0, 0}, {10000, 0, 0, 0},
+	{6000, -30, 0, 0}, {10000, 0, 0, 0},
+	{3000, 10, -30, 40}, {10000, 0, 0, 0},
+	{3000, 10, 40, -30}, {10000, 0, 0, 0},
+	{0, 0, 0, 0}
+};
+void NextAction() {
+	SoftTimer[0] = actions[stage][0];
+	g_nTargetSpeed = actions[stage][1];
+	g_nLeftBias = actions[stage][2];
+	g_nRightBias = actions[stage][3];
+	stage++;
+}
 void SecTask() {
-	if (SoftTimer[0]) return;
-	else SoftTimer[0] = 1000;
+	if (SoftTimer[0] == 0 & stage < 10)
+		NextAction();
 }
 /* USER CODE END 0 */
 
@@ -89,8 +104,7 @@ int main(void)
 	u8g2_t u8g2;
 	char cStr[3];
 	char cStr2[6];
-	int stage = 0;
-	int timer = 0;
+	
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -138,9 +152,6 @@ int main(void)
   while (1)
   {
 		SecTask();
-		if (SoftTimer[1] == 0) {
-			SoftTimer[1] = 20;
-		}
 		if (SoftTimer[2] == 0) {
 			SoftTimer[2] = 20;
 			
@@ -149,16 +160,13 @@ int main(void)
 			sprintf(cStr, "%5.1f", g_fCarAngle);
 			u8g2_DrawStr(&u8g2, 50, 30, cStr);
 			
-			u8g2_DrawStr(&u8g2, 0, 50, "MotorOut:");
-			sprintf(cStr2, "%5.1f, %5.1f", g_fLeftMotorOut, g_fRightMotorOut);
+			u8g2_DrawStr(&u8g2, 0, 50, "Stage:");
+			sprintf(cStr2, "%d, %d", stage, SoftTimer[0]);
 			u8g2_DrawStr(&u8g2, 50, 50, cStr2);
 			u8g2_SendBuffer(&u8g2);
 			
 			ReadDistance();
 		}
-		
-		// forward
-		
 
 		
     /* USER CODE END WHILE */

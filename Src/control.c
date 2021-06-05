@@ -13,13 +13,20 @@
 #define CAR_ANGLE_SET								0
 #define CAR_ANGLE_SPEED_SET					0
 
-#define CAR_SPEED_SET								0
+#define CAR_SPEED_SET								g_nTargetSpeed
 #define CAR_POSITION_MAX						900
 #define CAR_POSITION_MIN						-900
 #define SPEED_CONTROL_PERIOD				25
 
 #define CAR_ZERO_ANGLE							g_fCarAngleOffset
-float g_fCarAngleOffset = 5.0;
+
+#define CAR_LEFT_BIAS								g_nLeftBias;
+#define CAR_RIGHT_BIAS							g_nRightBias;
+
+int g_nTargetSpeed = 0;
+float g_fCarAngleOffset = 2.7;
+int g_nLeftBias = 0;
+int g_nRightBias = 0;
 
 unsigned int g_nMainEventCount;
 unsigned int g_nGetPulseCount;
@@ -125,8 +132,8 @@ void SetMotorVoltageAndDirection(int nLeftMotorPwm, int nRightMotorPwm) {
 }
 
 void MotorOutput(void) {
-	g_fLeftMotorOut = g_fAngleControlOut - g_fSpeedControlOut;
-	g_fRightMotorOut = g_fAngleControlOut - g_fSpeedControlOut;
+	g_fLeftMotorOut = g_fAngleControlOut - g_fSpeedControlOut + CAR_LEFT_BIAS;
+	g_fRightMotorOut = g_fAngleControlOut - g_fSpeedControlOut + CAR_RIGHT_BIAS;
 
 	if ((int)g_fLeftMotorOut > 0) g_fLeftMotorOut += MOTOR_OUT_DEAD_VAL;
 	else if ((int)g_fLeftMotorOut < 0) g_fLeftMotorOut -= MOTOR_OUT_DEAD_VAL;

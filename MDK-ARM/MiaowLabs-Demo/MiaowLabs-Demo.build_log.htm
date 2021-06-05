@@ -28,7 +28,14 @@ Project File Date:  06/04/2021
 *** Using Compiler 'V5.06 update 7 (build 960)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
 Build target 'MiaowLabs-Demo'
 Note: source file '../Src/system_stm32f1xx.c' - object file renamed from 'MiaowLabs-Demo\system_stm32f1xx.o' to 'MiaowLabs-Demo\system_stm32f1xx_1.o'.
-"MiaowLabs-Demo\MiaowLabs-Demo.axf" - 0 Error(s), 0 Warning(s).
+compiling main.c...
+../Src/main.c(160): warning:  #223-D: function "sprintf" declared implicitly
+  			sprintf(cStr, "%5.1f", g_fCarAngle);
+../Src/main.c: 1 warning, 0 errors
+linking...
+Program Size: Code=21224 RO-data=1936 RW-data=344 ZI-data=2512  
+FromELF: creating hex file...
+"MiaowLabs-Demo\MiaowLabs-Demo.axf" - 0 Error(s), 1 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -52,7 +59,7 @@ Package Vendor: Keil
 
    * Component: ARM::CMSIS:CORE:5.4.0
       Include file:  CMSIS\Core\Include\tz_context.h
-Build Time Elapsed:  00:00:00
+Build Time Elapsed:  00:00:02
 </pre>
 </body>
 </html>

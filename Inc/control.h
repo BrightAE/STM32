@@ -8,7 +8,9 @@ extern unsigned int g_nGetPulseCount;
 extern unsigned int g_nSpeedControlCount;
 extern float g_fCarAngle;
 extern unsigned int g_nLeftMotorPulse, g_nRightMotorPulse;
-extern int g_nSpeedTarget;
+extern int g_nTargetSpeed;
+extern int g_nLeftBias;
+extern int g_nRightBias;
 extern float g_fLeftMotorOut, g_fRightMotorOut;
 extern int g_nSpeedControlPeriod;
 
