@@ -30,5 +30,4 @@ miaowlabs-demo\button.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h
 miaowlabs-demo\button.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h
 miaowlabs-demo\button.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h
 miaowlabs-demo\button.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h
-miaowlabs-demo\button.o: ../Inc/ultrasonic.h
 miaowlabs-demo\button.o: ../Inc/stm32f1xx_it.h

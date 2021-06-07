@@ -34,7 +34,6 @@ miaowlabs-demo\main.o: ../Inc/i2c.h
 miaowlabs-demo\main.o: ../Inc/tim.h
 miaowlabs-demo\main.o: ../Inc/usart.h
 miaowlabs-demo\main.o: ../Inc/gpio.h
-miaowlabs-demo\main.o: ../Inc/button.h
 miaowlabs-demo\main.o: ../Inc/encoder.h
 miaowlabs-demo\main.o: ../Inc/mpu6050.h
 miaowlabs-demo\main.o: ../Inc/control.h

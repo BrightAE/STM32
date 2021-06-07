@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F103xB</Define>
               <Undefine></Undefine>
-              <IncludePath>../Inc;                 ../Drivers/STM32F1xx_HAL_Driver/Inc;                 ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy;                 ../Drivers/CMSIS/Device/ST/STM32F1xx/Include;                 ../Drivers/CMSIS/Include</IncludePath>
+              <IncludePath>../Inc;                  ../Drivers/STM32F1xx_HAL_Driver/Inc;                  ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy;                  ../Drivers/CMSIS/Device/ST/STM32F1xx/Include;                  ../Drivers/CMSIS/Include</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -393,11 +393,6 @@
         <Group>
           <GroupName>Application/User</GroupName>
           <Files>
-            <File>
-              <FileName>button.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Src\button.c</FilePath>
-            </File>
             <File>
               <FileName>encoder.c</FileName>
               <FileType>1</FileType>
@@ -617,6 +612,11 @@
               <FileName>u8x8_8x8.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Src\u8x8_8x8.c</FilePath>
+            </File>
+            <File>
+              <FileName>ultrasonic.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\ultrasonic.c</FilePath>
             </File>
             <File>
               <FileName>main.c</FileName>
@@ -856,11 +856,6 @@
               <FileName>stm32f1xx_hal_msp.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Src/stm32f1xx_hal_msp.c</FilePath>
-            </File>
-            <File>
-              <FileName>ultrasonic.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Src\ultrasonic.c</FilePath>
             </File>
           </Files>
         </Group>

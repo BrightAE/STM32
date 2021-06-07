@@ -1,6 +1,5 @@
 --cpu Cortex-M3
 "miaowlabs-demo\startup_stm32f103xb.o"
-"miaowlabs-demo\button.o"
 "miaowlabs-demo\encoder.o"
 "miaowlabs-demo\mpu6050.o"
 "miaowlabs-demo\filter.o"
@@ -45,6 +44,7 @@
 "miaowlabs-demo\u8x8_cad.o"
 "miaowlabs-demo\u8x8_byte.o"
 "miaowlabs-demo\u8x8_8x8.o"
+"miaowlabs-demo\ultrasonic.o"
 "miaowlabs-demo\main.o"
 "miaowlabs-demo\gpio.o"
 "miaowlabs-demo\i2c.o"
@@ -52,7 +52,6 @@
 "miaowlabs-demo\usart.o"
 "miaowlabs-demo\stm32f1xx_it.o"
 "miaowlabs-demo\stm32f1xx_hal_msp.o"
-"miaowlabs-demo\ultrasonic.o"
 "miaowlabs-demo\stm32f1xx_hal_gpio_ex.o"
 "miaowlabs-demo\stm32f1xx_hal_i2c.o"
 "miaowlabs-demo\stm32f1xx_hal.o"

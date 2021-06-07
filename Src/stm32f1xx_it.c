@@ -23,7 +23,6 @@
 #include "stm32f1xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "button.h"
 #include "control.h"
 /* USER CODE END Includes */
 
@@ -187,7 +186,6 @@ void PendSV_Handler(void)
 void SysTick_Handler(void)
 {
   /* USER CODE BEGIN SysTick_IRQn 0 */
-	ButtonScan();
 	SoftTimerCountDown();
 	g_nMainEventCount++;
 	g_nSpeedControlPeriod++;
