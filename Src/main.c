@@ -159,6 +159,8 @@ int CheckActionFinished() {
 			g_nRightBias = 10; g_nLeftBias = -10;
 		} else if (different < -50) {
 			g_nRightBias = -10; g_nLeftBias = 10;
+		} else {
+			g_nRightBias = 0; g_nLeftBias = 0;
 		}
 	}
 	else temp = g_lLeftMotorPulseAction - g_lRightMotorPulseAction;
