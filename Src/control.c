@@ -27,6 +27,7 @@ int g_nTargetSpeed = 0;
 float g_fCarAngleOffset = 2.7;
 int g_nLeftBias = 0;
 int g_nRightBias = 0;
+int g_lLeftMotorPulseAction = 0, g_lRightMotorPulseAction = 0;
 
 unsigned int g_nMainEventCount;
 unsigned int g_nGetPulseCount;
@@ -86,6 +87,9 @@ void GetMotorPulse(void) {
 	
 	g_lLeftMotorPulseSigma += g_nLeftMotorPulse;
 	g_lRightMotorPulseSigma += g_nRightMotorPulse;
+	
+	g_lLeftMotorPulseAction += g_nLeftMotorPulse;
+	g_lRightMotorPulseAction += g_nRightMotorPulse;
 }
 
 int SpeedInnerControl(int nPulse, int nTarget, int nPwm, int nErrorPrev) {

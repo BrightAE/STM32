@@ -14,6 +14,8 @@ extern int g_nRightBias;
 extern float g_fLeftMotorOut, g_fRightMotorOut;
 extern int g_nSpeedControlPeriod;
 
+extern int g_lLeftMotorPulseAction, g_lRightMotorPulseAction;
+
 void GetMPUData(void);
 void AngleCalculate(void);
 void GetMotorPulse(void);

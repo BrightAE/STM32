@@ -64,8 +64,15 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+#define NORMAL_SPEED						30
+#define TURN_BIG_STEP 					150
+#define TURN_SMALL_STEP 				-150
+#define TURN_SPEED							-20
+#define TURN_PULSE_LEFT 				1750
+#define TURN_PULSE_RIGHT 				1800
+#define PULSE_1M								15000
+
 unsigned short SoftTimer[5] = {0, 0, 0, 0, 0};
-int stage = 0;
 
 void SoftTimerCountDown(void) {
 	char i;
@@ -73,24 +80,91 @@ void SoftTimerCountDown(void) {
 		if (SoftTimer[i] > 0) SoftTimer[i]--;
 	}
 }
-int actions[10][4] = {
-	{4000, 0, 0, 0},
-	{3000, 30, 0, 0}, {10000, 0, 0, 0},
-	{6000, -30, 0, 0}, {10000, 0, 0, 0},
-	{3000, 10, -30, 40}, {10000, 0, 0, 0},
-	{3000, 10, 40, -30}, {10000, 0, 0, 0},
-	{0, 0, 0, 0}
-};
-void NextAction() {
-	SoftTimer[0] = actions[stage][0];
-	g_nTargetSpeed = actions[stage][1];
-	g_nLeftBias = actions[stage][2];
-	g_nRightBias = actions[stage][3];
-	stage++;
+
+int action = 0;
+int g_nTargetPulse = 0;
+
+void SetForward() {
+	g_lLeftMotorPulseAction = g_lRightMotorPulseAction = 0;
+	g_nTargetPulse = PULSE_1M;
+	action = 1;
 }
+
+void SetBackForward() {
+	g_lLeftMotorPulseAction = g_lRightMotorPulseAction = 0;
+	g_nTargetPulse = PULSE_1M;
+	action = 3;
+}
+void SetLeft() {
+	g_lLeftMotorPulseAction = g_lRightMotorPulseAction = 0;
+	g_nTargetPulse = TURN_PULSE_LEFT;
+	action = 5;
+}
+void SetRight() {
+	g_lLeftMotorPulseAction = g_lRightMotorPulseAction = 0;
+	g_nTargetPulse = TURN_PULSE_RIGHT;
+	action = 7;
+}
+void SetAction() {
+	action++;
+	if (action % 2 == 0) SoftTimer[1] = 5000;
+	else if (action == 1) SetForward();
+	else if (action == 3) SetBackForward();
+	else if (action == 5) SetLeft();
+	else if (action == 7) SetRight();
+}
+
+
+void TurnLeft() {
+	g_nLeftBias = TURN_BIG_STEP;
+	g_nRightBias = TURN_SMALL_STEP;
+	g_nTargetSpeed = TURN_SPEED;
+}
+
+void TurnRight() {
+	g_nLeftBias = TURN_SMALL_STEP;
+	g_nRightBias = TURN_BIG_STEP;
+	g_nTargetSpeed = TURN_SPEED;
+}
+void Forward() {
+	g_nTargetSpeed = NORMAL_SPEED;
+}
+void Backward() {
+	g_nTargetSpeed = -NORMAL_SPEED;
+}
+
+void ExecAction() {
+	if (action == 1) Forward();
+	else if (action == 3) Backward();
+	else if (action == 5) TurnLeft();
+	else if (action == 7) TurnRight();
+}
+
+int CheckActionFinished() {
+	if (action % 2 == 0)
+		return SoftTimer[1] == 0;
+	
+	int temp = 0;
+	if (action <= 3) temp = g_lLeftMotorPulseAction + g_lRightMotorPulseAction;
+	else temp = g_lLeftMotorPulseAction - g_lRightMotorPulseAction;
+	
+	if (temp < 0) temp = -temp;
+	if (temp >= g_nTargetPulse)
+		return 1;
+	return 0;
+}
+
 void SecTask() {
-	if (SoftTimer[0] == 0 & stage < 10)
-		NextAction();
+	if (SoftTimer[0] == 0) {
+		SoftTimer[0] = 5;
+		
+		if (CheckActionFinished()) {
+			g_nLeftBias = 0;
+			g_nRightBias = 0;
+			g_nTargetSpeed = 0;
+			SetAction();
+		} else ExecAction();
+	}
 }
 /* USER CODE END 0 */
 
@@ -102,9 +176,8 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 	u8g2_t u8g2;
-	char cStr[3];
-	char cStr2[6];
-	
+	char cStr[9];
+	SoftTimer[1] = 5000;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -160,11 +233,10 @@ int main(void)
 			sprintf(cStr, "%5.1f", g_fCarAngle);
 			u8g2_DrawStr(&u8g2, 50, 30, cStr);
 			
-			u8g2_DrawStr(&u8g2, 0, 50, "Stage:");
-			sprintf(cStr2, "%d, %d", stage, SoftTimer[0]);
-			u8g2_DrawStr(&u8g2, 50, 50, cStr2);
+			u8g2_DrawStr(&u8g2, 0, 50, "State:");
+			sprintf(cStr, "%d %d ", action, g_nTargetSpeed);
+			u8g2_DrawStr(&u8g2, 50, 50, cStr);
 			u8g2_SendBuffer(&u8g2);
-			
 			ReadDistance();
 		}
 
