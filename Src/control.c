@@ -20,8 +20,10 @@
 
 #define CAR_ZERO_ANGLE							g_fCarAngleOffset
 
-#define CAR_LEFT_BIAS								g_nLeftBias;
-#define CAR_RIGHT_BIAS							g_nRightBias;
+#define CAR_LEFT_BIAS								g_nLeftBias
+#define CAR_RIGHT_BIAS							g_nRightBias
+#define WHELL_BIAS									15
+#define WHELL_BIAS_FACTOR						1.02
 
 int g_nTargetSpeed = 0;
 float g_fCarAngleOffset = 2.7;
@@ -138,6 +140,9 @@ void SetMotorVoltageAndDirection(int nLeftMotorPwm, int nRightMotorPwm) {
 void MotorOutput(void) {
 	g_fLeftMotorOut = g_fAngleControlOut - g_fSpeedControlOut + CAR_LEFT_BIAS;
 	g_fRightMotorOut = g_fAngleControlOut - g_fSpeedControlOut + CAR_RIGHT_BIAS;
+	
+//	g_fRightMotorOut = g_fRightMotorOut > 0 ? g_fRightMotorOut + WHELL_BIAS : g_fRightMotorOut - WHELL_BIAS;
+//	g_fRightMotorOut = g_fRightMotorOut * WHELL_BIAS_FACTOR;
 
 	if ((int)g_fLeftMotorOut > 0) g_fLeftMotorOut += MOTOR_OUT_DEAD_VAL;
 	else if ((int)g_fLeftMotorOut < 0) g_fLeftMotorOut -= MOTOR_OUT_DEAD_VAL;
