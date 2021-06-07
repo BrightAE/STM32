@@ -63,23 +63,30 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-#define TURN_BIG_STEP 		150
-#define TURN_SMALL_STEP 	-150
-#define TURN_SPEED				-20
-#define REC_PULSE_1 				1600
-#define REC_PULSE_2 				1450
-#define DETECTION_DISTANCE 15
+#define TRACE_TURN_BIG_STEP						250
+#define TRACE_TURN_SMALL_STEP					150
+#define TRACE_TURN_FAST_SPEED					14
+#define TRACE_TURN_SLOW_SPEED					14
+#define TRACE_JITTER_SPEED						7
+
+#define AVOID_NORMAL_SPEED						14
+#define AVOID_TURN_BIG_STEP 					150
+#define AVOID_TURN_SMALL_STEP 				-150
+#define AVOID_TURN_SPEED							-20
+#define AVOID_REC_PULSE_LEFT 					1450
+#define AVOID_REC_PULSE_RIGHT 				1600
+#define AVOID_DETECTION_DISTANCE 			15
+
 
 unsigned short SoftTimer[5] = {0, 0, 0, 0, 0};
-int CurrentAction = 0; // 0: balance 1: avoiding
-int DistancePrev = 0;
+
+int stage = 1, flag = 0;
+int La = 0, Lb = 0, Ra = 0, Rb = 0;
 int state = 0;
 int action = 0;
-int hasGap = 0;
-int g_nLeftBiasAvoidance = 0, g_nRightBiasAvoidance = 0, g_nTargetSpeedAvoidance = 0;
+
+int g_nLeftBiasAvoidance = 0, g_nRightBiasAvoidance = 0, g_nTargetSpeedAvoidance = 0, g_nTargetPulse = 0;
 int g_nLeftBiasTrail = 0, g_nRightBiasTrail = 0, g_nTargetSpeedTrail = 0;
-int La = 0, Lb = 0, Ra = 0, Rb = 0;
-int g_nTargetPulse = 0;
 
 void SoftTimerCountDown(void) {
 	char i;
@@ -88,29 +95,30 @@ void SoftTimerCountDown(void) {
 	}
 }
 
-void SetRight() {
-	g_lLeftMotorPulseAction = g_lRightMotorPulseAction = 0;
-	g_nTargetPulse = REC_PULSE_2;
-	action = 1;
-}
-
 void SetLeft() {
 	g_lLeftMotorPulseAction = g_lRightMotorPulseAction = 0;
-	g_nTargetPulse = REC_PULSE_1;
+	g_nTargetPulse = AVOID_REC_PULSE_LEFT;
+	action = 1;
+}
+void TurnLeft() {
+	g_nLeftBiasAvoidance = AVOID_TURN_BIG_STEP;
+	g_nRightBiasAvoidance = AVOID_TURN_SMALL_STEP;
+	g_nTargetSpeedAvoidance = AVOID_TURN_SPEED;
+}
+
+void SetRight() {
+	g_lLeftMotorPulseAction = g_lRightMotorPulseAction = 0;
+	g_nTargetPulse = AVOID_REC_PULSE_RIGHT;
 	action = 2;
 }
 
 void TurnRight() {
-	g_nLeftBiasAvoidance = TURN_BIG_STEP;
-	g_nRightBiasAvoidance = TURN_SMALL_STEP;
-	g_nTargetSpeedAvoidance = TURN_SPEED;
+	g_nLeftBiasAvoidance = AVOID_TURN_SMALL_STEP;
+	g_nRightBiasAvoidance = AVOID_TURN_BIG_STEP;
+	g_nTargetSpeedAvoidance = AVOID_TURN_SPEED;
 }
 
-void TurnLeft() {
-	g_nLeftBiasAvoidance = TURN_SMALL_STEP;
-	g_nRightBiasAvoidance = TURN_BIG_STEP;
-	g_nTargetSpeedAvoidance = TURN_SPEED;
-}
+
 
 void CheckActionFinished() {
 	if (action == 0) return;
@@ -139,57 +147,74 @@ void ExecAction() {
 void StateControl() {
 	if (state == 4) state = 0;
 	if (state == 0) {
-		if (Distance <= DETECTION_DISTANCE) {
+		if (Distance <= AVOID_DETECTION_DISTANCE) {
 			SetLeft();
 		}
 	} else if (state == 1) {
-		if (Distance <= DETECTION_DISTANCE) {
+		if (Distance <= AVOID_DETECTION_DISTANCE) {
 			SetRight();
 		}
 	} else if (state == 2) {
-		if (Distance <= DETECTION_DISTANCE) {
+		if (Distance <= AVOID_DETECTION_DISTANCE) {
 			SetRight();
 		}
 	} else if (state == 3) {
-		if (Distance <= DETECTION_DISTANCE) {
+		if (Distance <= AVOID_DETECTION_DISTANCE) {
 			SetLeft();
 		}
 	}
 }
 
 void AvoidTask() {
-	if (SoftTimer[0] == 0) {
-		SoftTimer[0] = 20;
-		
-		g_nLeftBiasAvoidance = 0;
-		g_nRightBiasAvoidance = 0;
-		g_nTargetSpeedAvoidance = 14;
-		
-		
-		if (!action) StateControl();
-		else ExecAction();
-	}
+	g_nLeftBiasAvoidance = 0, g_nRightBiasAvoidance = 0;
+	g_nTargetSpeedAvoidance = AVOID_NORMAL_SPEED;
+	
+	if (!action) StateControl();
+	else ExecAction();
 }
 
 void TraceTask() {
-	int bigStep = 250, smallStep = 150;
-	int FASTSPEED = 14, SLOWSPEED= 14;
-	g_nLeftBiasTrail = 0, g_nRightBiasTrail = 0, g_nTargetSpeedTrail = 0;
-	if (SoftTimer[1] == 0) {
-		SoftTimer[1] = 5;
+	g_nLeftBiasTrail = 0, g_nRightBiasTrail = 0;
+	g_nTargetSpeedTrail = TRACE_TURN_FAST_SPEED;
+	if ((La + Lb + Ra + Rb) <= 2) {
+		if (Lb == 1) g_nRightBiasTrail += TRACE_TURN_BIG_STEP, g_nLeftBiasTrail -= TRACE_TURN_BIG_STEP, g_nTargetSpeedTrail = TRACE_TURN_SLOW_SPEED;
+		if (La == 1) g_nRightBiasTrail += TRACE_TURN_SMALL_STEP, g_nLeftBiasTrail -= TRACE_TURN_SMALL_STEP, g_nTargetSpeedTrail = TRACE_TURN_FAST_SPEED;
+		if (Ra == 1) g_nLeftBiasTrail += TRACE_TURN_SMALL_STEP, g_nRightBiasTrail -= TRACE_TURN_SMALL_STEP, g_nTargetSpeedTrail = TRACE_TURN_FAST_SPEED;
+		if (Rb == 1) g_nLeftBiasTrail += TRACE_TURN_BIG_STEP, g_nRightBiasTrail -= TRACE_TURN_BIG_STEP, g_nTargetSpeedTrail = TRACE_TURN_SLOW_SPEED;
+	}else{
+		g_nTargetSpeedTrail = TRACE_JITTER_SPEED;
+	}
+}
+
+void SecTask() {
+	if (SoftTimer[0] == 0) {
+		SoftTimer[0] = 5;
+		
 		La = HAL_GPIO_ReadPin(La_GPIO_Port, La_Pin);
 		Lb = HAL_GPIO_ReadPin(Lb_GPIO_Port, Lb_Pin);
 		Ra = HAL_GPIO_ReadPin(Ra_GPIO_Port, Ra_Pin);
 		Rb = HAL_GPIO_ReadPin(Rb_GPIO_Port, Rb_Pin);
-		g_nTargetSpeedTrail = FASTSPEED;
-		if ((La + Lb + Ra + Rb) <= 2) {
-			if (Lb == 1) g_nRightBiasTrail += bigStep, g_nLeftBiasTrail -= bigStep, g_nTargetSpeedTrail = SLOWSPEED;
-			if (La == 1) g_nRightBiasTrail += smallStep, g_nLeftBiasTrail -= smallStep, g_nTargetSpeedTrail = FASTSPEED;
-			if (Ra == 1) g_nLeftBiasTrail += smallStep, g_nRightBiasTrail -= smallStep, g_nTargetSpeedTrail = FASTSPEED;
-			if (Rb == 1) g_nLeftBiasTrail += bigStep, g_nRightBiasTrail -= bigStep, g_nTargetSpeedTrail = SLOWSPEED;
-		}else{
-			g_nTargetSpeedTrail = 7;
+		if ((La + Lb + Ra + Rb) == 4 && g_fCarAngle <= 2.0 && !flag) {
+			stage++; flag = 1;
+			g_nLeftBiasAvoidance = g_nRightBiasAvoidance = g_nTargetSpeedAvoidance = 0;
+			g_nLeftBiasTrail = g_nRightBiasTrail = g_nTargetSpeedTrail = 0;
+		} else if ((La + Lb + Ra + Rb) != 4)  flag = 0;
+		
+		int temp = Distance;
+		if(temp <= 3) temp = 1000;
+		ReadDistance();
+		if (Distance > 1000 || Distance <= 3) {
+			Distance = temp;
 		}
+		
+		if (stage == 1) TraceTask();
+		else if (stage == 2) AvoidTask();
+		
+		g_nLeftBias = g_nLeftBiasAvoidance + g_nLeftBiasTrail;
+		g_nRightBias = g_nRightBiasAvoidance + g_nRightBiasTrail;
+		g_nTargetSpeed = g_nTargetSpeedAvoidance + g_nTargetSpeedTrail;
+		
+		if (stage == 0) g_nTargetSpeed = 14;
 	}
 }
 
@@ -206,9 +231,7 @@ int main(void)
 	char cStr[3];
 	char cStr2[10];
 	
-	int dist[4] = { 1000 }, min_dist= 1000 , BIG_TICK_COUNT=0;
 	Distance = 1000;
-	int stage = 1, flag = 0;
 	
   /* USER CODE END 1 */
 
@@ -257,9 +280,7 @@ int main(void)
   while (1)
   {
 		
-//		SecTask();
-		if (stage == 0) TraceTask();
-		else if (stage == 1) AvoidTask();
+		SecTask();
 		
 		if (SoftTimer[2] == 0) {
 			SoftTimer[2] = 20;
@@ -281,46 +302,6 @@ int main(void)
 			u8g2_SendBuffer(&u8g2);
 		}
 		
-		if (SoftTimer[3] == 0) {
-			SoftTimer[3] = 2;
-			La = HAL_GPIO_ReadPin(La_GPIO_Port, La_Pin);
-			Lb = HAL_GPIO_ReadPin(Lb_GPIO_Port, Lb_Pin);
-			Ra = HAL_GPIO_ReadPin(Ra_GPIO_Port, Ra_Pin);
-			Rb = HAL_GPIO_ReadPin(Rb_GPIO_Port, Rb_Pin);
-			if ((La + Lb + Ra + Rb) == 4 && g_fCarAngle <= 2.0 && !flag) {
-				stage++; flag = 1;
-				g_nLeftBiasAvoidance = g_nRightBiasAvoidance = g_nTargetSpeedAvoidance = 0;
-				g_nLeftBiasTrail = g_nRightBiasTrail = g_nTargetSpeedTrail = 0;
-			} else if ((La + Lb + Ra + Rb) != 4)  flag = 0;
-			
-			BIG_TICK_COUNT++;
-			int temp = Distance;
-			if(temp < 3) temp = 1000;
-			ReadDistance();
-		  if (Distance > 1000 || Distance <= 3) {
-				Distance = temp;
-			}
-			//int temp_count=0;
-			//for (int i=0;i<4;i++) if( dist[i]-Distance <= 6 && Distance-dist[i]<=6) temp_count++;
-			//if(temp_count<=2 && BIG_TICK_COUNT>=5)
-			//	Distance = dist[3];
-			//else
-			//{
-				//for (int i = 0; i < 3; ++i)
-					//dist[i] = dist[i + 1];
-//				dist[3] = Distance;
-			//}
-			//if(BIG_TICK_COUNT>=5&&temp_count<=2)
-				//Distance=temp;
-			//for (int i = 0; i < 4; ++i)
-				
-			
-			
-		}
-		
-		g_nLeftBias = g_nLeftBiasAvoidance + g_nLeftBiasTrail;
-		g_nRightBias = g_nRightBiasAvoidance + g_nRightBiasTrail;
-		g_nTargetSpeed = g_nTargetSpeedAvoidance + g_nTargetSpeedTrail;
 		
     /* USER CODE END WHILE */
 
