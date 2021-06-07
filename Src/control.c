@@ -140,6 +140,9 @@ void SetMotorVoltageAndDirection(int nLeftMotorPwm, int nRightMotorPwm) {
 void MotorOutput(void) {
 	g_fLeftMotorOut = g_fAngleControlOut - g_fSpeedControlOut + CAR_LEFT_BIAS;
 	g_fRightMotorOut = g_fAngleControlOut - g_fSpeedControlOut + CAR_RIGHT_BIAS;
+	
+	//if(g_fRightMotorOut<-10)g_fRightMotorOut-=10;
+	//else if(g_fRightMotorOut>10)g_fRightMotorOut+=10;
 
 	if ((int)g_fLeftMotorOut > 0) g_fLeftMotorOut += MOTOR_OUT_DEAD_VAL;
 	else if ((int)g_fLeftMotorOut < 0) g_fLeftMotorOut -= MOTOR_OUT_DEAD_VAL;
