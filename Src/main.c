@@ -102,7 +102,7 @@ int lastDist[RECORD_DIST_NUMBER];
 int DebugDist[RECORD_DIST_NUMBER];
 
 int g_nLeftBiasAvoidance = 0, g_nRightBiasAvoidance = 0, g_nTargetSpeedAvoidance = 0; long g_nTargetPulse = 0, g_nStartPulse = 0;
-int g_nLeftBiasTrail = 0, g_nRightBiasTrail = 0, g_nTargetSpeedTrail = 0;
+int g_nLeftBiasTrail = 0, g_nRightBiasTrail = 0, g_nTargetSpeedTrail = 0, g_nLastActivedLaser = 0  , g_nLastActivedLaserCount=0;
 double g_nTurnSpeedPercent;
 
 int g_nWantStraight = 0; long g_nStraightMotorPulseActionDelta = 0;
@@ -238,11 +238,20 @@ void AvoidTask() {
 void TraceTask() {
 	g_nLeftBiasTrail = 0, g_nRightBiasTrail = 0;
 	g_nTargetSpeedTrail = TRACE_TURN_FAST_SPEED;
-	if ((La + Lb + Ra + Rb) <= 3) {
-		if (Lb == 1) g_nRightBiasTrail += TRACE_TURN_BIG_STEP, g_nLeftBiasTrail -= TRACE_TURN_BIG_STEP, g_nTargetSpeedTrail = TRACE_TURN_SLOW_SPEED;
-		if (La == 1) g_nRightBiasTrail += TRACE_TURN_SMALL_STEP, g_nLeftBiasTrail -= TRACE_TURN_SMALL_STEP, g_nTargetSpeedTrail = TRACE_TURN_FAST_SPEED;
-		if (Ra == 1) g_nLeftBiasTrail += TRACE_TURN_SMALL_STEP, g_nRightBiasTrail -= TRACE_TURN_SMALL_STEP, g_nTargetSpeedTrail = TRACE_TURN_FAST_SPEED;
-		if (Rb == 1) g_nLeftBiasTrail += TRACE_TURN_BIG_STEP, g_nRightBiasTrail -= TRACE_TURN_BIG_STEP, g_nTargetSpeedTrail = TRACE_TURN_SLOW_SPEED;
+	if ((La + Lb + Ra + Rb) == 0 ) {
+		if(g_nLastActivedLaser==2)
+			g_nRightBiasTrail += TRACE_TURN_SMALL_STEP, g_nLeftBiasTrail -= TRACE_TURN_SMALL_STEP, g_nTargetSpeedTrail = TRACE_TURN_FAST_SPEED;
+		if(g_nLastActivedLaser==3)
+			g_nLeftBiasTrail += TRACE_TURN_SMALL_STEP, g_nRightBiasTrail -= TRACE_TURN_SMALL_STEP, g_nTargetSpeedTrail = TRACE_TURN_FAST_SPEED;
+		
+		g_nLastActivedLaserCount --;
+		if(!g_nLastActivedLaserCount)g_nLastActivedLaser = 0;
+	}
+	else if ((La + Lb + Ra + Rb) <= 3) {
+		if (Lb == 1) g_nRightBiasTrail += TRACE_TURN_BIG_STEP, g_nLeftBiasTrail -= TRACE_TURN_BIG_STEP, g_nTargetSpeedTrail = TRACE_TURN_SLOW_SPEED , 		g_nLastActivedLaser = 1 , g_nLastActivedLaserCount=20;
+		if (La == 1) g_nRightBiasTrail += TRACE_TURN_SMALL_STEP, g_nLeftBiasTrail -= TRACE_TURN_SMALL_STEP, g_nTargetSpeedTrail = TRACE_TURN_FAST_SPEED , g_nLastActivedLaser = 2 , g_nLastActivedLaserCount=20;
+		if (Ra == 1) g_nLeftBiasTrail += TRACE_TURN_SMALL_STEP, g_nRightBiasTrail -= TRACE_TURN_SMALL_STEP, g_nTargetSpeedTrail = TRACE_TURN_FAST_SPEED , g_nLastActivedLaser = 3 , g_nLastActivedLaserCount=20;
+		if (Rb == 1) g_nLeftBiasTrail += TRACE_TURN_BIG_STEP, g_nRightBiasTrail -= TRACE_TURN_BIG_STEP, g_nTargetSpeedTrail = TRACE_TURN_SLOW_SPEED , 		g_nLastActivedLaser = 4 , g_nLastActivedLaserCount=20;
 	} else {
 		g_nTargetSpeedTrail = TRACE_JITTER_SPEED;
 	}
@@ -275,6 +284,7 @@ void SecTask() {
 	
 	g_nLeftBiasAvoidance = g_nRightBiasAvoidance = g_nTargetSpeedAvoidance = 0;
 	g_nLeftBiasTrail = g_nRightBiasTrail = g_nTargetSpeedTrail = 0;
+	g_nLastActivedLaser = 0;
 	
 	if(DEBUG_WANT_STAGE_CHANGE){
 		if ((La + Lb + Ra + Rb) == 4 && g_fCarAngle <= UNTRUSTWORTHY_ANGLE && !flag) {
