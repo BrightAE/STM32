@@ -94,31 +94,27 @@ int g_nTargetPulse = 0;
 void SetForward() {
 	g_lLeftMotorPulseAction = g_lRightMotorPulseAction = 0;
 	g_nTargetPulse = PULSE_FORWARD_1M;
-	action = 1;
 }
 
 void SetBackForward() {
 	g_lLeftMotorPulseAction = g_lRightMotorPulseAction = 0;
 	g_nTargetPulse = PULSE_BACKWARD_1M;
-	action = 3;
 }
 void SetLeft() {
 	g_lLeftMotorPulseAction = g_lRightMotorPulseAction = 0;
 	g_nTargetPulse = TURN_PULSE_LEFT;
-	action = 5;
 }
 void SetRight() {
 	g_lLeftMotorPulseAction = g_lRightMotorPulseAction = 0;
 	g_nTargetPulse = TURN_PULSE_RIGHT;
-	action = 7;
 }
 void SetAction() {
 	action++;
 	if (action % 2 == 0) SoftTimer[1] = 3000;
 	else if (action == 1) SetForward();
 	else if (action == 3) SetBackForward();
-	else if (action == 5) SetLeft();
-	else if (action == 7) SetRight();
+	else if (action == 5) SetRight();
+	else if (action == 7) SetLeft();
 }
 
 
@@ -143,8 +139,8 @@ void Backward() {
 void ExecAction() {
 	if (action == 1) Forward();
 	else if (action == 3) Backward();
-	else if (action == 5) TurnLeft();
-	else if (action == 7) TurnRight();
+	else if (action == 5) TurnRight();
+	else if (action == 7) TurnLeft();
 }
 
 int CheckActionFinished() {
@@ -244,12 +240,16 @@ int main(void)
 			SoftTimer[2] = 20;
 			
 			u8g2_ClearBuffer(&u8g2);
-			u8g2_DrawStr(&u8g2, 0, 30, "Angle:");
+			u8g2_DrawStr(&u8g2, 0, 0, "Angle:");
 			sprintf(cStr, "%5.1f", g_fCarAngle);
+			u8g2_DrawStr(&u8g2, 50, 0, cStr);
+			
+			u8g2_DrawStr(&u8g2, 0, 30, "State:");
+			sprintf(cStr, "%d %d", (int)g_lLeftMotorPulseAction, (int)g_lRightMotorPulseAction);
 			u8g2_DrawStr(&u8g2, 50, 30, cStr);
 			
-			u8g2_DrawStr(&u8g2, 0, 50, "State:");
-			sprintf(cStr, "%d %d", (int)g_lLeftMotorPulseAction, (int)g_lRightMotorPulseAction);
+			u8g2_DrawStr(&u8g2, 0, 50, "Action:");
+			sprintf(cStr, "%d", action);
 			u8g2_DrawStr(&u8g2, 50, 50, cStr);
 			u8g2_SendBuffer(&u8g2);
 			ReadDistance();
