@@ -64,28 +64,29 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 #define INITIAL_SPEED							6
-#define START_STAGE								2
-#define UNTRUSTWORTHY_ANGLE 			0.0
-#define DEBUG_WANT_STAGE_CHANGE		0
+#define START_STAGE								1
+#define UNTRUSTWORTHY_ANGLE 			3.0
+#define DEBUG_WANT_STAGE_CHANGE		1
 #define DEBUG_JUST_TURN						0
 #define DEBUG_WAIT_TIME						0
 
-#define TRACE_TURN_BIG_STEP						250
-#define TRACE_TURN_SMALL_STEP					100
-#define TRACE_TURN_FAST_SPEED					11
-#define TRACE_TURN_SLOW_SPEED					11
-#define TRACE_JITTER_SPEED						7
+#define TRACE_TURN_BIG_STEP						150
+#define TRACE_TURN_SMALL_STEP				  120
+#define TRACE_TURN_FAST_SPEED					5
+#define TRACE_TURN_SLOW_SPEED					5
+#define TRACE_JITTER_SPEED						5
 
-#define AVOID_NORMAL_SPEED						23
-#define AVOID_TURN_BIG_STEP 					120
-#define AVOID_TURN_SMALL_STEP 				-120
-#define AVOID_TURN_SPEED							-6
-#define AVOID_REC_PULSE_LEFT 					-1900
-#define AVOID_REC_PULSE_RIGHT 				1900
-#define AVOID_DETECTION_DISTANCE 			20
+#define AVOID_NORMAL_SPEED						18		//23 30
+#define AVOID_TURN_BIG_STEP 					150		//120 200
+#define AVOID_TURN_SMALL_STEP 				-150	//-120 200
+#define AVOID_TURN_SPEED							-15		//-6 -33
+#define AVOID_REC_PULSE_LEFT 					-1900	//-1900 -1840
+#define AVOID_REC_PULSE_RIGHT 				1900	//1900 1840
+#define AVOID_DETECTION_DISTANCE 			20		//20 25
 
 #define RECORD_DIST_NUMBER						4
 #define TRUST_RECORD_NUMBER						3
+#define BALANCE_SPEED						-3
 
 int DEBUG_SLEEP = 0;
 
@@ -237,12 +238,12 @@ void AvoidTask() {
 void TraceTask() {
 	g_nLeftBiasTrail = 0, g_nRightBiasTrail = 0;
 	g_nTargetSpeedTrail = TRACE_TURN_FAST_SPEED;
-	if ((La + Lb + Ra + Rb) <= 3 && g_fCarAngle <= UNTRUSTWORTHY_ANGLE) {
+	if ((La + Lb + Ra + Rb) <= 3) {
 		if (Lb == 1) g_nRightBiasTrail += TRACE_TURN_BIG_STEP, g_nLeftBiasTrail -= TRACE_TURN_BIG_STEP, g_nTargetSpeedTrail = TRACE_TURN_SLOW_SPEED;
 		if (La == 1) g_nRightBiasTrail += TRACE_TURN_SMALL_STEP, g_nLeftBiasTrail -= TRACE_TURN_SMALL_STEP, g_nTargetSpeedTrail = TRACE_TURN_FAST_SPEED;
 		if (Ra == 1) g_nLeftBiasTrail += TRACE_TURN_SMALL_STEP, g_nRightBiasTrail -= TRACE_TURN_SMALL_STEP, g_nTargetSpeedTrail = TRACE_TURN_FAST_SPEED;
 		if (Rb == 1) g_nLeftBiasTrail += TRACE_TURN_BIG_STEP, g_nRightBiasTrail -= TRACE_TURN_BIG_STEP, g_nTargetSpeedTrail = TRACE_TURN_SLOW_SPEED;
-	}else{
+	} else {
 		g_nTargetSpeedTrail = TRACE_JITTER_SPEED;
 	}
 }
@@ -275,10 +276,6 @@ void SecTask() {
 	g_nLeftBiasAvoidance = g_nRightBiasAvoidance = g_nTargetSpeedAvoidance = 0;
 	g_nLeftBiasTrail = g_nRightBiasTrail = g_nTargetSpeedTrail = 0;
 	
-	La = HAL_GPIO_ReadPin(La_GPIO_Port, La_Pin);
-	Lb = HAL_GPIO_ReadPin(Lb_GPIO_Port, Lb_Pin);
-	Ra = HAL_GPIO_ReadPin(Ra_GPIO_Port, Ra_Pin);
-	Rb = HAL_GPIO_ReadPin(Rb_GPIO_Port, Rb_Pin);
 	if(DEBUG_WANT_STAGE_CHANGE){
 		if ((La + Lb + Ra + Rb) == 4 && g_fCarAngle <= UNTRUSTWORTHY_ANGLE && !flag) {
 			
@@ -288,6 +285,9 @@ void SecTask() {
 			else if(stage == 2)SetWantStraight();
 			
 		} else if ((La + Lb + Ra + Rb) != 4)  flag = 0;
+	}
+	if(stage==1 && Distance <= AVOID_DETECTION_DISTANCE){			// trick
+		stage = 2;
 	}
 	
 	
@@ -300,6 +300,8 @@ void SecTask() {
 	
 	
 	if (stage == 0) g_nTargetSpeed = INITIAL_SPEED;
+	
+	g_nTargetSpeed += BALANCE_SPEED;
 }
 
 
@@ -320,6 +322,12 @@ void KeepStraight(){
 		else if(nowDelta < g_nStraightMotorPulseActionDelta - 15)
 			g_nLeftBias += 3, g_nRightBias -= 3;
 		
+		if(stage == 1){			
+			if(nowDelta > g_nStraightMotorPulseActionDelta + 100)
+				g_nLeftBias -= 25, g_nRightBias += 25;
+			else if(nowDelta < g_nStraightMotorPulseActionDelta - 100)
+				g_nLeftBias += 25, g_nRightBias -= 25;
+		}
 	}
 }
 /* USER CODE END 0 */
@@ -334,6 +342,7 @@ int main(void)
 	u8g2_t u8g2;
 	char cStr[30];
 	char cStr2[30];
+	int laserCount = 0;
 	
 	Distance = 1000;
 	
@@ -396,6 +405,14 @@ int main(void)
 		if(SoftTimer[0] == 0){
 			SoftTimer[0] = 5;
 			
+			laserCount++;
+			if (laserCount == 1) {
+				laserCount = 0;
+				La = HAL_GPIO_ReadPin(La_GPIO_Port, La_Pin);
+				Lb = HAL_GPIO_ReadPin(Lb_GPIO_Port, Lb_Pin);
+				Ra = HAL_GPIO_ReadPin(Ra_GPIO_Port, Ra_Pin);
+				Rb = HAL_GPIO_ReadPin(Rb_GPIO_Port, Rb_Pin);
+			}
 			
 			if (SoftTimer[3] == 0) {
 				SecTask();
@@ -410,13 +427,17 @@ int main(void)
 			
 			u8g2_ClearBuffer(&u8g2);
 			
-			/*u8g2_DrawStr(&u8g2, 0, 15, "Angle:");
+			u8g2_DrawStr(&u8g2, 0, 8, "Angle:");
 			sprintf(cStr, "%4.1f", g_fCarAngle);
-			u8g2_DrawStr(&u8g2, 50, 15, cStr);*/
-			u8g2_DrawStr(&u8g2, 0, 8, "DebugDist:");
+			u8g2_DrawStr(&u8g2, 50, 8, cStr);
+//			u8g2_DrawStr(&u8g2, 0, 8, "DebugDist:");
 			//sprintf(cStr, "%d %d %d %d %d %d %d %d", DebugDist[0], DebugDist[1], DebugDist[2],DebugDist[3],DebugDist[4],DebugDist[5],DebugDist[6],DebugDist[7]);
-			sprintf(cStr, "%d %d %d %d", DebugDist[0], DebugDist[1], DebugDist[2],DebugDist[3]);
-			u8g2_DrawStr(&u8g2, 0, 16, cStr);
+//			sprintf(cStr, "%d %d %d %d", DebugDist[0], DebugDist[1], DebugDist[2],DebugDist[3]);
+//			u8g2_DrawStr(&u8g2, 0, 16, cStr);
+			
+			u8g2_DrawStr(&u8g2, 0, 16, "Laser:");
+			sprintf(cStr2, "%d %d %d %d", Lb, La, Ra, Rb);
+			u8g2_DrawStr(&u8g2, 50, 16, cStr2);
 			
 			u8g2_DrawStr(&u8g2, 0, 30, "Dis/Stage:");
 			sprintf(cStr2, "%d %d", Distance, stage);			

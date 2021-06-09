@@ -24,8 +24,8 @@
 #define CAR_RIGHT_BIAS							g_nRightBias;
 
 int g_nTargetSpeed = 0;
-// float g_fCarAngleOffset = 2.7;
-float g_fCarAngleOffset = 2.7;
+// float g_fCarAngleOffset = 2.7;//2.0
+float g_fCarAngleOffset = 0.5;
 int g_nLeftBias = 0;
 int g_nRightBias = 0;
 long g_lLeftMotorPulseAction = 0;
