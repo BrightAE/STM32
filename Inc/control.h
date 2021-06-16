@@ -14,6 +14,8 @@ extern int g_nRightBias;
 extern float g_fLeftMotorOut, g_fRightMotorOut;
 extern int g_nSpeedControlPeriod;
 
+extern float g_fCarAngleOffset;
+
 extern long g_lLeftMotorPulseAction;
 extern long g_lRightMotorPulseAction;
 

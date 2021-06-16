@@ -71,7 +71,7 @@ void SystemClock_Config(void);
 #define DEBUG_WAIT_TIME						0
 
 #define TRACE_TURN_BIG_STEP						180//150
-#define TRACE_TURN_SMALL_STEP				  120
+#define TRACE_TURN_SMALL_STEP				  80//120
 #define TRACE_TURN_FAST_SPEED					5
 #define TRACE_TURN_SLOW_SPEED					5
 #define TRACE_JITTER_SPEED						5
@@ -84,15 +84,15 @@ void SystemClock_Config(void);
 #define AVOID_REC_PULSE_RIGHT 				1900	//1900 1840
 #define AVOID_DETECTION_DISTANCE 			20		//20 25
 
-#define RECORD_DIST_NUMBER						4
-#define TRUST_RECORD_NUMBER						3
-#define BALANCE_SPEED						-4
+#define RECORD_DIST_NUMBER						3
+#define TRUST_RECORD_NUMBER						2
+#define BALANCE_SPEED						-3
 
 int DEBUG_SLEEP = 0;
 
 
 
-unsigned short SoftTimer[5] = {0, 0, 0, 0, 0};
+unsigned short SoftTimer[10] = {0, 0, 0, 0, 0};
 
 int stage = START_STAGE, flag = 0;
 int La = 0, Lb = 0, Ra = 0, Rb = 0;
@@ -107,7 +107,7 @@ double g_nTurnSpeedPercent;
 
 int g_nWantStraight = 0; long g_nStraightMotorPulseActionDelta = 0;
 
-
+// try to take 90 turn
 long ApproachDegree90Delta(long true_delta){
 	int SmallRange = 250, BigRange = 300;
 	true_delta%=4000;
@@ -130,7 +130,7 @@ void UnsetWantStraight(){
 }
 void SoftTimerCountDown(void) {
 	char i;
-	for (i = 0; i < 5; ++i) {
+	for (i = 0; i < 10; ++i) {
 		if (SoftTimer[i] > 0) SoftTimer[i]--;
 	}
 }
@@ -210,23 +210,34 @@ void StateControl() {
 	if (state == 4) state = 0;
 	if (state == 0) {
 		if (Distance <= AVOID_DETECTION_DISTANCE || DEBUG_JUST_TURN) {
-			SetLeft();
+			//SetLeft();
+			
+			SetRight();
 		}
 	} else if (state == 1) {
 		if (Distance <= AVOID_DETECTION_DISTANCE || DEBUG_JUST_TURN) {
-			SetRight();
+			//SetRight();
+			
+			SetLeft();
 		}
 	} else if (state == 2) {
 		if (Distance <= AVOID_DETECTION_DISTANCE || DEBUG_JUST_TURN) {
-			SetRight();
+			//SetRight();
+			
+			SetLeft();
 		}
 	} else if (state == 3) {
 		if (Distance <= AVOID_DETECTION_DISTANCE || DEBUG_JUST_TURN) {
-			SetLeft();
+			//SetLeft();
+			
+			SetRight();
 		}
 	}
 }
 
+
+// avoid task
+// if no action executing, do state control
 void AvoidTask() {
 	g_nLeftBiasAvoidance = 0, g_nRightBiasAvoidance = 0;
 	g_nTargetSpeedAvoidance = AVOID_NORMAL_SPEED;
@@ -235,6 +246,7 @@ void AvoidTask() {
 	else ExecAction();
 }
 
+// trace task
 void TraceTask() {
 	g_nLeftBiasTrail = 0, g_nRightBiasTrail = 0;
 	g_nTargetSpeedTrail = TRACE_TURN_FAST_SPEED;
@@ -252,10 +264,10 @@ void TraceTask() {
 		if(!g_nLastActivedLaserCount)g_nLastActivedLaser = 0;
 	}
 	else if ((La + Lb + Ra + Rb) <= 3) {
-		if (Lb == 1) g_nRightBiasTrail += TRACE_TURN_BIG_STEP, g_nLeftBiasTrail -= TRACE_TURN_BIG_STEP, g_nTargetSpeedTrail = TRACE_TURN_SLOW_SPEED , 		g_nLastActivedLaser = 1 , g_nLastActivedLaserCount=100;
-		if (La == 1) g_nRightBiasTrail += TRACE_TURN_SMALL_STEP, g_nLeftBiasTrail -= TRACE_TURN_SMALL_STEP, g_nTargetSpeedTrail = TRACE_TURN_FAST_SPEED , g_nLastActivedLaser = 2 , g_nLastActivedLaserCount=100;
-		if (Ra == 1) g_nLeftBiasTrail += TRACE_TURN_SMALL_STEP, g_nRightBiasTrail -= TRACE_TURN_SMALL_STEP, g_nTargetSpeedTrail = TRACE_TURN_FAST_SPEED , g_nLastActivedLaser = 3 , g_nLastActivedLaserCount=100;
-		if (Rb == 1) g_nLeftBiasTrail += TRACE_TURN_BIG_STEP, g_nRightBiasTrail -= TRACE_TURN_BIG_STEP, g_nTargetSpeedTrail = TRACE_TURN_SLOW_SPEED , 		g_nLastActivedLaser = 4 , g_nLastActivedLaserCount=100;
+		if (Lb == 1) g_nRightBiasTrail += TRACE_TURN_BIG_STEP, g_nLeftBiasTrail -= TRACE_TURN_BIG_STEP, g_nTargetSpeedTrail = TRACE_TURN_SLOW_SPEED , 		g_nLastActivedLaser = 1 , g_nLastActivedLaserCount=80;
+		if (La == 1) g_nRightBiasTrail += TRACE_TURN_SMALL_STEP, g_nLeftBiasTrail -= TRACE_TURN_SMALL_STEP, g_nTargetSpeedTrail = TRACE_TURN_FAST_SPEED , g_nLastActivedLaser = 2 , g_nLastActivedLaserCount=5;
+		if (Ra == 1) g_nLeftBiasTrail += TRACE_TURN_SMALL_STEP, g_nRightBiasTrail -= TRACE_TURN_SMALL_STEP, g_nTargetSpeedTrail = TRACE_TURN_FAST_SPEED , g_nLastActivedLaser = 3 , g_nLastActivedLaserCount=5;
+		if (Rb == 1) g_nLeftBiasTrail += TRACE_TURN_BIG_STEP, g_nRightBiasTrail -= TRACE_TURN_BIG_STEP, g_nTargetSpeedTrail = TRACE_TURN_SLOW_SPEED , 		g_nLastActivedLaser = 4 , g_nLastActivedLaserCount=80;
 	} else {
 		g_nTargetSpeedTrail = TRACE_JITTER_SPEED;
 	}
@@ -337,9 +349,9 @@ void KeepStraight(){
 		
 		if(stage == 1){			
 			if(nowDelta > g_nStraightMotorPulseActionDelta + 100)
-				g_nLeftBias -= 25, g_nRightBias += 25;
+				g_nLeftBias -= 24, g_nRightBias += 24;
 			else if(nowDelta < g_nStraightMotorPulseActionDelta - 100)
-				g_nLeftBias += 25, g_nRightBias -= 25;
+				g_nLeftBias += 24, g_nRightBias -= 24;
 		}
 	}
 }
@@ -410,9 +422,21 @@ int main(void)
 	
   while (1)
   {
-		if (stage > 2) {
-			return 0;
+		if (stage == 3) {
+			g_fCarAngleOffset = 2.0;
+			g_nTargetSpeed = 40;
+			g_nLeftBias = 0;
+			g_nRightBias = 0;
+			SoftTimer[5] = 3000;
+			stage = 4;
 		}
+		
+		if (SoftTimer[5] == 0 && stage == 4) {
+			g_nTargetSpeed = 0;
+			g_nLeftBias = 0;
+			g_nRightBias = 0;
+		}
+		
 		
 		if(SoftTimer[4]==0){
 			SoftTimer[4]=71;
